@@ -3,7 +3,7 @@
 #   docker compose pull && docker compose up -d
 services:
   app:
-    image: ghcr.io/irwinthetapemeasure/christmas-list:latest
+    image: ghcr.io/irwinthetapemeasure/whishbook:latest
     restart: unless-stopped
     env_file: .env
     # Match the owner of ./data on your NAS (run `id` on the NAS to find yours).

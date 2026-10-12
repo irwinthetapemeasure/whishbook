@@ -3,7 +3,7 @@
 services:
   app:
     build: .
-    image: christmas-list:local
+    image: whishbook:local
     ports:
       - "127.0.0.1:8000:8000"
     environment:

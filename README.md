@@ -1,6 +1,6 @@
-# 🎄 Christmas Lists
+# 🎄 Whishbook
 
-A small self-hosted wish-list site for gift exchanges. One site can host several separate exchanges (your family, the in-laws, the office); each has its own passphrase, and the passphrase someone types decides which exchange they land in. Exchanges never see each other.
+Christmas lists for the family: a small self-hosted wish-list site for gift exchanges. One site can host several separate exchanges (your family, the in-laws, the office); each has its own passphrase, and the passphrase someone types decides which exchange they land in. Exchanges never see each other.
 
 - Everyone adds themselves with a name and a 4–6 digit PIN, then builds their list (link, price, notes, how much they want it).
 - Others tap **I'm getting this** so nobody doubles up. **The list owner never sees what's been claimed or by whom.**
@@ -39,7 +39,7 @@ Cloudflare dashboard → **Turnstile** → **Add widget**. Hostname: `christmas.
 
 ### 3. Set up the folder on the NAS
 
-Make a folder (e.g. `/volume1/docker/christmas-list`) and put two files in it:
+Make a folder (e.g. `/volume1/docker/whishbook`) and put two files in it:
 
 - `docker-compose.yml` from this repo
 - `.env`, copied from `.env.example` and filled in:
@@ -87,7 +87,7 @@ In the Cloudflare dashboard for your domain:
 
 ## Updating
 
-Pushing to `main` runs the tests and publishes `ghcr.io/irwinthetapemeasure/christmas-list:latest` (amd64 + arm64). On the NAS:
+Pushing to `main` runs the tests and publishes `ghcr.io/irwinthetapemeasure/whishbook:latest` (amd64 + arm64). On the NAS:
 
 ```sh
 docker compose pull && docker compose up -d
