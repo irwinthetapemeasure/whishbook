@@ -5,7 +5,7 @@
 {% else %}<p>Pick your name to log in, or add yourself if you're new.</p>{% endif %}
 <ul class="people">
   {% for p in people %}
-  <li><a href="{% if me %}/p/{{ p.id }}{% else %}/login/{{ p.id }}{% endif %}">{{ p.name }}</a></li>
+  <li><a href="{% if me %}/p/{{ p.id }}{% else %}/login/{{ p.id }}{% endif %}"><span class="avatar av-{{ loop.index0 % 6 }}" aria-hidden="true">{{ p.name[:1] | upper }}</span><span class="person-name">{{ p.name }}{% if me and p.id == me.id %}<span class="you">That's you</span>{% endif %}</span></a></li>
   {% else %}
   <li class="muted">Nobody yet. Be the first!</li>
   {% endfor %}

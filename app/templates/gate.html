@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card narrow">
+<div class="card narrow hero">
+  <div class="hero-mark" aria-hidden="true">🎁</div>
   <h1>Welcome</h1>
   {% if locked %}
     <p class="error">Too many wrong guesses from this connection. Try again in about {{ (locked // 60) + 1 }} minutes.</p>

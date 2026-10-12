@@ -55,4 +55,5 @@ Remaining:
 - The container runs with a read-only root filesystem and only `/data` writable. If it crashes with permission errors, `PUID`/`PGID` don't match the owner of `data/`.
 - Behind the tunnel, `COOKIE_SECURE` must stay true (the default). Over plain `http://` on the LAN it must be false or logins won't stick.
 - The app needs outbound internet for Turnstile verification. If Turnstile keys are set and it can't reach Cloudflare, logins fail (fails closed on purpose).
+- The CSP is `style-src 'self'; font-src 'self'; img-src 'self' data:`, so styling must live in `static/style.css`: no `style=""` attributes, no web fonts from a CDN. Decorations are SVG data URIs in the CSS. Look: pine-green header with a candy-stripe edge, cranberry buttons, gold accents, pill nav with `aria-current`; light and dark themes via `prefers-color-scheme`.
 - Jinja escapes apostrophes (`&#39;`), so test assertions on page text should avoid matching across an apostrophe.
