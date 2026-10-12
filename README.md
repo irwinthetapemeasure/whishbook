@@ -1,4 +1,4 @@
-# 🎄 Whishbook
+# 🎄 Wishbook
 
 Christmas lists for the family: a small self-hosted wish-list site for gift exchanges. One site can host several separate exchanges (your family, the in-laws, the office); each has its own passphrase, and the passphrase someone types decides which exchange they land in. Exchanges never see each other.
 
