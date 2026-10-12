@@ -3,42 +3,46 @@
 <h1>Admin: {{ group.name }}</h1>
 <div class="card">
   <h2>People</h2>
-  <table class="admin">
+  <ul class="admin-people">
     {% for p in people %}
-    <tr>
-      <td><strong>{{ p.name }}</strong>{% if p.is_admin %} <span class="tag">admin</span>{% endif %}</td>
-      <td>
+    <li class="person-row">
+      <div class="person-head">
+        <span class="avatar av-{{ loop.index0 % 6 }}" aria-hidden="true">{{ p.name[:1] | upper }}</span>
+        <strong class="person-name">{{ p.name }}</strong>
+        {% if p.is_admin %}<span class="tag">admin</span>{% endif %}
+        {% if p.id == me.id %}<span class="muted small">(you)</span>{% endif %}
+      </div>
+      <div class="person-actions">
         <form method="post" action="/admin/people/{{ p.id }}/rename" class="inline">
           <input type="hidden" name="csrf" value="{{ csrf }}">
-          <input name="name" maxlength="40" placeholder="New name" required>
+          <input name="name" maxlength="40" placeholder="New name" required aria-label="New name for {{ p.name }}">
           <button class="secondary">Rename</button>
         </form>
-      </td>
-      <td>
         <form method="post" action="/admin/people/{{ p.id }}/pin" class="inline">
           <input type="hidden" name="csrf" value="{{ csrf }}">
-          <input name="pin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" placeholder="New PIN" required autocomplete="off">
+          <input name="pin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" placeholder="New PIN" required autocomplete="off" aria-label="New PIN for {{ p.name }}">
           <button class="secondary">Reset PIN</button>
         </form>
-      </td>
-      <td>
         {% if p.id != me.id %}
         <form method="post" action="/admin/people/{{ p.id }}/admin" class="inline">
           <input type="hidden" name="csrf" value="{{ csrf }}">
           <button class="secondary">{% if p.is_admin %}Remove admin{% else %}Make admin{% endif %}</button>
         </form>
-        <form method="post" action="/admin/people/{{ p.id }}/delete" class="inline" data-confirm="Delete {{ p.name }} and ALL their lists, including past years?">
-          <input type="hidden" name="csrf" value="{{ csrf }}">
-          <input name="confirm_name" maxlength="40" placeholder="Type name to delete" required>
-          <button class="danger">Delete</button>
-        </form>
+        <details class="pdelete">
+          <summary>Delete…</summary>
+          <form method="post" action="/admin/people/{{ p.id }}/delete" class="inline" data-confirm="Delete {{ p.name }} and ALL their lists, including past years?">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input name="confirm_name" maxlength="40" placeholder="Type {{ p.name }} to confirm" required aria-label="Type {{ p.name }} to confirm">
+            <button class="danger">Delete</button>
+          </form>
+        </details>
         {% endif %}
-      </td>
-    </tr>
+      </div>
+    </li>
     {% endfor %}
-  </table>
+  </ul>
 </div>
-<div class="card narrow">
+<div class="card">
   <h2>Questionnaire <span class="pill {% if quiz_on %}pill-on{% else %}pill-off{% endif %}">{% if quiz_on %}On{% else %}Off{% endif %}</span></h2>
   <p class="muted small">A "get to know me" form (favourite colours, snacks, hobbies…) that people fill in when they join.
     Answers show on their list. {% if quiz_count %}{{ quiz_count }} questions.{% endif %}</p>
@@ -51,7 +55,7 @@
     <a class="button secondary" href="/admin/questionnaire">Edit questions</a>
   </div>
 </div>
-<div class="card narrow">
+<div class="card">
   <h2>Change this exchange's passphrase</h2>
   <p class="muted small">Everyone else in {{ group.name }} will need to enter the new passphrase.</p>
   <form method="post" action="/admin/passphrase">
@@ -61,7 +65,7 @@
     <button>Change passphrase</button>
   </form>
 </div>
-<div class="card narrow">
+<div class="card">
   <h2>Backup</h2>
   <p class="muted small">A backup of the whole site is made automatically once a day. You can also make one now.</p>
   <form method="post" action="/admin/backup">
