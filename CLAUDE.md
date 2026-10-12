@@ -43,12 +43,15 @@ Deployed 2026-10-12 to the owner's TrueNAS SCALE 25.10 box **blackbox** (Tailsca
 - Tunnel: the owner's existing remotely-managed `cloudflared` Dockge stack. Public hostname `wishbook.awiebe.ca` → `http://whishbook:8000`. Do **not** point it at `10.69.69.69:8000`: that's the NAS LAN IP, and host port 8000 belongs to Tunarr.
 - GHCR package is public, so no `docker login` needed. Update: `docker compose pull && docker compose up -d` in the stack folder (or Dockge "Update").
 
+Done: exchange "The New Haven Collective" created (2026-10-12); Turnstile widget for `wishbook.awiebe.ca` with keys in the stack `.env` (verified enforced); Cloudflare rate-limit rule "Wishbook login throttle" (POST to `/gate`, `/join`, `/login/*`, 5 per 10s per IP, block 10s, which is the free-plan maximum; verified: 6th request gets 429).
+
 Remaining:
-1. [ ] Create the exchanges: `docker exec -it whishbook python -m app.manage add-group "<Name>"` (passphrase 12+ chars, unique).
-2. [ ] Turnstile widget for `wishbook.awiebe.ca` (Managed); put both keys in the stack `.env`, then recreate the container.
-3. [ ] Cloudflare hardening: WAF rate-limit rule (POST to `/gate`, `/join`, `/login/*`: more than 5 per 10s per IP blocks for 10 min), Bot Fight Mode on, Always Use HTTPS, optional country block.
-4. [ ] Phone test on mobile data: gate, join, add an item, claim from a second account, confirm the owner can't see the claim.
-5. [ ] Confirm snapshots/backups cover `fastboi/whishbook` (the app also keeps 14 daily copies in `data/backups/`).
+1. [ ] Bot Fight Mode on, Always Use HTTPS on; optional country block.
+2. [ ] Phone test on mobile data: join, add an item, claim from a second account, confirm the owner can't see the claim.
+3. [ ] Confirm snapshots/backups cover `fastboi/whishbook` (the app also keeps 14 daily copies in `data/backups/`).
+4. [ ] Revoke the temporary admin access used for the deploy: Claude's SSH key in root's Authorized Keys, and the `claude-cloud` Tailscale device.
+
+To add another exchange: `docker exec -it whishbook python -m app.manage add-group "<Name>"` (passphrase 12+ chars, unique).
 
 ## Gotchas
 - The compose file has **no `ports:` on purpose**; only cloudflared reaches the app. For LAN-only testing use `docker-compose.local.yml` (binds 127.0.0.1:8000, `COOKIE_SECURE=false`).
