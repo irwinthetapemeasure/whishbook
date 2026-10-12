@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Questionnaire{% endblock %}
+{% block content %}
+<p class="small"><a href="/admin">← Back to admin</a></p>
+<h1>Questionnaire</h1>
+
+<div class="card status-card {% if quiz_on %}on{% endif %}">
+  <div>
+    <h2>{% if quiz_on %}On{% else %}Off{% endif %}</h2>
+    <p class="muted small">
+      {% if quiz_on %}New people fill it in when they join, and anyone who hasn't is asked again each time they log in.
+      Answers show on each person's list.
+      {% else %}Nobody is asked, and existing answers are hidden (not deleted).{% endif %}
+    </p>
+  </div>
+  <form method="post" action="/admin/questionnaire/enabled">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="back" value="quiz">
+    {% if quiz_on %}<button class="secondary" name="enabled" value="0">Turn off</button>
+    {% else %}<button name="enabled" value="1">Turn on</button>{% endif %}
+  </form>
+</div>
+
+<div class="card">
+  <h2>Questions <span class="muted small">{{ questions|length }} of {{ MAX_QUESTIONS }}</span></h2>
+  {% if questions %}
+  <ol class="qlist">
+    {% for q in questions %}
+    <li class="qrow">
+      <form method="post" action="/admin/questionnaire/questions/{{ q.id }}/edit" class="qedit">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input name="text" value="{{ q.text }}" maxlength="{{ QUESTION_LEN }}" required aria-label="Question {{ loop.index }}">
+        <label class="check"><input type="checkbox" name="long" value="1" {% if q.long %}checked{% endif %}> Long answer</label>
+        <button class="secondary">Save</button>
+      </form>
+      <div class="qtools">
+        <form method="post" action="/admin/questionnaire/questions/{{ q.id }}/move" class="inline">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="secondary icon" name="direction" value="up" title="Move up" aria-label="Move up" {% if loop.first %}disabled{% endif %}>↑</button>
+          <button class="secondary icon" name="direction" value="down" title="Move down" aria-label="Move down" {% if loop.last %}disabled{% endif %}>↓</button>
+        </form>
+        <form method="post" action="/admin/questionnaire/questions/{{ q.id }}/delete" class="inline" data-confirm="Remove this question and everyone's answers to it?">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="danger">Remove</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted">No questions yet. Add your own below or start from a template.</p>
+  {% endif %}
+
+  <form method="post" action="/admin/questionnaire/questions" class="qadd">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Add a question
+      <input name="text" maxlength="{{ QUESTION_LEN }}" placeholder="e.g. Favourite board game" required>
+    </label>
+    <label class="check"><input type="checkbox" name="long" value="1"> Long answer</label>
+    <button>Add question</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Start from a template</h2>
+  <p class="muted small">Loading a template <strong>replaces all the questions above</strong> and clears the answers to them.
+    Everyone will be asked to fill in the new questions at their next login.</p>
+  <form method="post" action="/admin/questionnaire/template" data-confirm="Replace all current questions (and their answers) with this template?">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="templates">
+      {% for key, t in TEMPLATES.items() %}
+      <label class="template">
+        <input type="radio" name="template" value="{{ key }}" {% if loop.first %}checked{% endif %}>
+        <span><strong>{{ t.name }}</strong> <span class="muted small">{{ t.questions|length }} questions</span><br>
+        <span class="muted small">{{ t.description }}</span></span>
+      </label>
+      {% endfor %}
+    </div>
+    <button class="secondary">Load template</button>
+  </form>
+</div>
+{% endblock %}

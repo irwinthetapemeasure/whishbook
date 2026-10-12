@@ -5,6 +5,18 @@
 {% if years|length > 1 %}<nav class="years">
   {% for y in years %}<a href="/p/{{ person.id }}?year={{ y }}" class="{% if y == shown_year %}current{% endif %}">{{ y }}</a>{% endfor %}
 </nav>{% endif %}
+{% if quiz_on and (about or is_owner) %}
+<details class="card about"{% if not is_owner and about and not items %} open{% endif %}>
+  <summary><span class="about-title">📝 {% if is_owner %}My answers{% else %}About {{ person.name }}{% endif %}</span>
+    <span class="muted small">{% if about %}{{ about|length }} answer{{ "s" if about|length != 1 }}{% else %}not filled in yet{% endif %}</span></summary>
+  {% if about %}
+  <dl class="answers">
+    {% for a in about %}<div class="{% if a.long %}wide{% endif %}"><dt>{{ a.text }}</dt><dd>{{ a.answer }}</dd></div>{% endfor %}
+  </dl>
+  {% endif %}
+  {% if is_owner %}<p><a class="button secondary" href="/questionnaire">{% if about %}Edit my answers{% else %}Fill it in{% endif %}</a></p>{% endif %}
+</details>
+{% endif %}
 {% if not editable %}<p class="muted">This is a past year's list, kept for memories. It can't be changed.</p>{% endif %}
 
 {% if items %}

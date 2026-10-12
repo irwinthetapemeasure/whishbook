@@ -16,6 +16,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config import Settings, load_settings
 from .db import Database
+from .questionnaire import TEMPLATES
 from .security import (
     SESSION_COOKIE,
     Limiter,
@@ -32,6 +33,9 @@ HERE = os.path.dirname(__file__)
 
 MAX_BODY = 32 * 1024
 MAX_ITEMS_PER_YEAR = 100
+MAX_QUESTIONS = 40
+QUESTION_LEN = 200
+ANSWER_LEN = 500
 NAME_RE = re.compile(r"^[\w][\w '.-]{0,39}$")
 PIN_RE = re.compile(r"^\d{4,6}$")
 PRIORITIES = {1: "Really want", 2: "Would like", 3: "Nice to have"}
@@ -383,6 +387,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         pin_hash = hash_secret(pin)
         pid = db.create_person(group["id"], clean, pin_hash, is_admin)
         sess(request).update(pid=pid, ph=pin_hash[-16:])
+        if db.quiz_pending(pid, group["id"]):
+            flash(request, f"Welcome, {clean}! First, a few questions so people know what you like. You can skip this.")
+            return go("/questionnaire")
         flash(request, f"Welcome, {clean}! Add things to your list below.")
         return go(f"/p/{pid}")
 
@@ -414,6 +421,8 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             return go(f"/login/{person_id}")
         limiter.reset(pkey)
         sess(request).update(pid=person_id, ph=person["pin_hash"][-16:])
+        if db.quiz_pending(person_id, group["id"]):
+            return go("/questionnaire")
         return go(f"/p/{person_id}")
 
     @app.post("/logout")
@@ -438,8 +447,11 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         years = sorted(set(db.years_for(person_id)) | {this_year}, reverse=True)
         is_owner = me["id"] == person_id
         items = db.items_for_owner(person_id, year) if is_owner else db.items_for_viewer(person_id, year)
+        about, _ = (db.quiz_answers_shown(person_id, person["group_id"])
+                                if db.quiz_enabled(person["group_id"]) else ([], None))
         return render(
             request, "list.html", person=person, items=items, years=years, shown_year=year,
+            about=about, quiz_on=db.quiz_enabled(person["group_id"]),
             is_owner=is_owner, editable=(year == this_year),
             can_copy=is_owner and year == this_year and not items and (this_year - 1) in years,
         )
@@ -565,11 +577,115 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             flash(request, "PIN changed.")
         return go("/account")
 
+    # ---- questionnaire -----------------------------------------------------------
+    @app.get("/questionnaire", response_class=HTMLResponse)
+    async def questionnaire(request: Request):
+        me = require_person(request)
+        if not db.quiz_enabled(me["group_id"]):
+            raise StarletteHTTPException(404)
+        return render(request, "questionnaire.html", questions=db.quiz_questions(me["group_id"]),
+                      answers=db.quiz_answers(me["id"]), first=db.quiz_pending(me["id"], me["group_id"]),
+                      ANSWER_LEN=ANSWER_LEN)
+
+    @app.post("/questionnaire")
+    async def questionnaire_save(request: Request):
+        me = require_person(request)
+        if not db.quiz_enabled(me["group_id"]):
+            raise StarletteHTTPException(404)
+        form = await request.form()
+        # Only this group's current questions are saved; anything else in the form is ignored.
+        answers = {q["id"]: str(form.get(f"q{q['id']}", "")).strip()[:ANSWER_LEN]
+                   for q in db.quiz_questions(me["group_id"])}
+        db.save_quiz_answers(me["id"], answers)
+        flash(request, "Thanks! Your answers are saved. Everyone in the exchange can see them on your list.")
+        return go(f"/p/{me['id']}")
+
     # ---- admin ----------------------------------------------------------------
     @app.get("/admin", response_class=HTMLResponse)
     async def admin(request: Request):
         me = require_admin(request)
-        return render(request, "admin.html", people=db.list_people(me["group_id"]))
+        return render(request, "admin.html", people=db.list_people(me["group_id"]),
+                      quiz_on=db.quiz_enabled(me["group_id"]),
+                      quiz_count=len(db.quiz_questions(me["group_id"])))
+
+    @app.get("/admin/questionnaire", response_class=HTMLResponse)
+    async def admin_quiz(request: Request):
+        me = require_admin(request)
+        return render(request, "admin_quiz.html", questions=db.quiz_questions(me["group_id"]),
+                      quiz_on=db.quiz_enabled(me["group_id"]), TEMPLATES=TEMPLATES,
+                      MAX_QUESTIONS=MAX_QUESTIONS, QUESTION_LEN=QUESTION_LEN)
+
+    def own_question(me, question_id: int):
+        q = db.get_quiz_question(question_id)
+        if not q or q["group_id"] != me["group_id"]:
+            raise StarletteHTTPException(404)
+        return q
+
+    def clean_question(text: str) -> str:
+        return " ".join(text.split())[:QUESTION_LEN]
+
+    @app.post("/admin/questionnaire/enabled")
+    async def admin_quiz_enabled(request: Request, enabled: str = Form(""), back: str = Form("")):
+        me = require_admin(request)
+        on = enabled == "1"
+        if on and not db.quiz_questions(me["group_id"]):
+            db.replace_quiz_questions(me["group_id"], TEMPLATES["family"]["questions"])
+            flash(request, f"Loaded the \"{TEMPLATES['family']['name']}\" questions to start you off.")
+        db.set_quiz_enabled(me["group_id"], on)
+        flash(request, "Questionnaire turned on. People will be asked to fill it in when they log in."
+              if on else "Questionnaire turned off. Answers are kept but hidden.")
+        return go("/admin/questionnaire" if back == "quiz" else "/admin")
+
+    @app.post("/admin/questionnaire/template")
+    async def admin_quiz_template(request: Request, template: str = Form("")):
+        me = require_admin(request)
+        t = TEMPLATES.get(template)
+        if not t:
+            flash(request, "Pick a template.", "error")
+        else:
+            db.replace_quiz_questions(me["group_id"], t["questions"])
+            flash(request, f"Loaded \"{t['name']}\". Everyone will be asked to fill it in at their next login.")
+        return go("/admin/questionnaire")
+
+    @app.post("/admin/questionnaire/questions")
+    async def admin_quiz_add(request: Request, text: str = Form(""), long: str = Form("")):
+        me = require_admin(request)
+        clean = clean_question(text)
+        if not clean:
+            flash(request, "Type a question first.", "error")
+        elif len(db.quiz_questions(me["group_id"])) >= MAX_QUESTIONS:
+            flash(request, f"That's the limit of {MAX_QUESTIONS} questions.", "error")
+        else:
+            db.add_quiz_question(me["group_id"], clean, long == "1")
+            flash(request, "Question added.")
+        return go("/admin/questionnaire")
+
+    @app.post("/admin/questionnaire/questions/{question_id}/edit")
+    async def admin_quiz_edit(request: Request, question_id: int, text: str = Form(""), long: str = Form("")):
+        me = require_admin(request)
+        own_question(me, question_id)
+        clean = clean_question(text)
+        if not clean:
+            flash(request, "A question can't be empty. Use Remove to delete it.", "error")
+        else:
+            db.update_quiz_question(question_id, clean, long == "1")
+            flash(request, "Question saved.")
+        return go("/admin/questionnaire")
+
+    @app.post("/admin/questionnaire/questions/{question_id}/move")
+    async def admin_quiz_move(request: Request, question_id: int, direction: str = Form("")):
+        me = require_admin(request)
+        own_question(me, question_id)
+        db.move_quiz_question(question_id, -1 if direction == "up" else 1)
+        return go("/admin/questionnaire")
+
+    @app.post("/admin/questionnaire/questions/{question_id}/delete")
+    async def admin_quiz_delete(request: Request, question_id: int):
+        me = require_admin(request)
+        own_question(me, question_id)
+        db.delete_quiz_question(question_id)
+        flash(request, "Question removed, along with everyone's answers to it.")
+        return go("/admin/questionnaire")
 
     def admin_target(me, person_id: int):
         person = db.get_person(person_id)

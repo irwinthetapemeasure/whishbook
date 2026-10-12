@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}About me{% endblock %}
+{% block content %}
+<div class="card quiz">
+  <div class="quiz-head">
+    <div class="hero-mark small-mark" aria-hidden="true">📝</div>
+    <div>
+      <h1>All about {{ me.name }}</h1>
+      <p class="muted">Help everyone pick something you'll love. Answer as many as you like; blanks are fine.
+        Everyone in {{ group.name }} can see your answers.</p>
+    </div>
+  </div>
+  <form method="post" action="/questionnaire">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="quiz-grid">
+    {% for q in questions %}
+      <label class="{% if q.long %}wide{% endif %}">{{ q.text }}
+        {% if q.long %}
+        <textarea name="q{{ q.id }}" rows="2" maxlength="{{ ANSWER_LEN }}">{{ answers.get(q.id, '') }}</textarea>
+        {% else %}
+        <input name="q{{ q.id }}" maxlength="{{ ANSWER_LEN }}" value="{{ answers.get(q.id, '') }}" autocomplete="off">
+        {% endif %}
+      </label>
+    {% endfor %}
+    </div>
+    <div class="quiz-actions">
+      <button>Save my answers</button>
+      <a class="button secondary" href="/p/{{ me.id }}">{% if first %}Skip for now{% else %}Cancel{% endif %}</a>
+    </div>
+    {% if first %}<p class="muted small">If you skip, we'll ask again next time you log in.</p>{% endif %}
+  </form>
+</div>
+{% endblock %}

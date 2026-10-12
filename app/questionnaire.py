@@ -1,0 +1,46 @@
+"""Preset questionnaires an admin can load. Each question is (text, long_answer)."""
+
+TEMPLATES = {
+    "family": {
+        "name": "Family favourites",
+        "description": "The classic family Christmas wish-list sheet: favourite things, hobbies and the two gifts you want most.",
+        "questions": [
+            ("Favorite Color 1", False),
+            ("Favorite Color 2", False),
+            ("Favorite Candy", False),
+            ("Favorite TV Show", False),
+            ("Favorite Movie", False),
+            ("Favorite Animal", False),
+            ("Favorite School Subject", False),
+            ("Favorite Hobby", False),
+            ("Favorite Sport", False),
+            ("Favorite Book", False),
+            ("Favorite Cereal", False),
+            ("Favorite Snack", False),
+            ("Favorite fun thing to do", False),
+            ("Favorite place to shop", False),
+            ("Something I collect", False),
+            ("Favorite song/singer/band", True),
+            ("Favorite Inside Activity", False),
+            ("Favorite Outside Activity", False),
+            ("Something I want to know more about", True),
+            ("What I want to be when I grow up", True),
+            ("2 Gifts I want the most", True),
+        ],
+    },
+    "grownups": {
+        "name": "Grown-up favourites",
+        "description": "A shorter set for adults: sizes, tastes and things to avoid.",
+        "questions": [
+            ("Clothing sizes (shirt, pants, shoes)", False),
+            ("Favourite colours", False),
+            ("Favourite snacks or treats", False),
+            ("Coffee, tea or something else?", False),
+            ("Hobbies I'm into right now", True),
+            ("Favourite stores or online shops", False),
+            ("Books, shows or music I love", True),
+            ("Something I've been meaning to buy myself", True),
+            ("Please no: things I don't need or can't use", True),
+        ],
+    },
+}
