@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card narrow">
+  <h1>Edit item</h1>
+  <form method="post" action="/items/{{ item.id }}/edit">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% include "_item_fields.html" %}
+    <button>Save</button>
+    <a href="/p/{{ me.id }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

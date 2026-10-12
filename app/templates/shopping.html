@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My shopping list <span class="muted">{{ year }}</span></h1>
+{% if claims %}
+<ul class="items">
+  {% for c in claims %}
+  <li class="item">
+    <div class="item-main">
+      <div class="item-title">
+        <span class="for">For <a href="/p/{{ c.owner_id }}">{{ c.owner_name }}</a>:</span>
+        {% if c.link %}<a href="{{ c.link }}" target="_blank" rel="noopener noreferrer nofollow">{{ c.title }}</a>{% else %}{{ c.title }}{% endif %}
+        {% if c.price %}<span class="price">{{ c.price }}</span>{% endif %}
+      </div>
+      {% if c.notes %}<div class="notes">{{ c.notes }}</div>{% endif %}
+    </div>
+    <div class="item-actions">
+      <form method="post" action="/items/{{ c.id }}/unclaim" class="inline">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="back" value="shopping">
+        <button class="secondary">Undo</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">You haven't picked anything yet. Open someone's list and tap "I'm getting this".</p>
+{% endif %}
+{% endblock %}

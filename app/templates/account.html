@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card narrow">
+  <h1>Change my PIN</h1>
+  <form method="post" action="/account/pin">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Current PIN <input type="password" name="current" inputmode="numeric" required maxlength="6" autocomplete="current-password"></label>
+    <label>New PIN <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,6}" required maxlength="6" autocomplete="new-password"></label>
+    <label>New PIN again <input type="password" name="pin2" inputmode="numeric" pattern="[0-9]{4,6}" required maxlength="6" autocomplete="new-password"></label>
+    <button>Change PIN</button>
+  </form>
+</div>
+{% endblock %}

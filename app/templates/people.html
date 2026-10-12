@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Who's here?</h1>
+{% if me %}<p>You're logged in as <strong>{{ me.name }}</strong>. Pick someone to see their list.</p>
+{% else %}<p>Pick your name to log in, or add yourself if you're new.</p>{% endif %}
+<ul class="people">
+  {% for p in people %}
+  <li><a href="{% if me %}/p/{{ p.id }}{% else %}/login/{{ p.id }}{% endif %}">{{ p.name }}</a></li>
+  {% else %}
+  <li class="muted">Nobody yet. Be the first!</li>
+  {% endfor %}
+</ul>
+{% if not me %}<p><a class="button" href="/join">I'm new, add me</a></p>{% endif %}
+<form method="post" action="/forget" class="inline small">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button class="link">Switch to another gift exchange / lock this device</button>
+</form>
+{% endblock %}

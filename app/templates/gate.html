@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card narrow">
+  <h1>Welcome</h1>
+  {% if locked %}
+    <p class="error">Too many wrong guesses from this connection. Try again in about {{ (locked // 60) + 1 }} minutes.</p>
+  {% else %}
+  <p>Enter your gift exchange's passphrase to continue.</p>
+  <form method="post" action="/gate">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Passphrase
+      <input type="password" name="passphrase" required maxlength="200" autocomplete="current-password" autofocus>
+    </label>
+    {% include "_turnstile.html" %}
+    <button>Enter</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

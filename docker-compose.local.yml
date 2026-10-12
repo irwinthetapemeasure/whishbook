@@ -1,0 +1,11 @@
+# Local testing without Cloudflare: builds from source and opens http://localhost:8000
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build app
+services:
+  app:
+    build: .
+    image: christmas-list:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - COOKIE_SECURE=false
+      - TRUST_CF_CONNECTING_IP=false

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Admin: {{ group.name }}</h1>
+<div class="card">
+  <h2>People</h2>
+  <table class="admin">
+    {% for p in people %}
+    <tr>
+      <td><strong>{{ p.name }}</strong>{% if p.is_admin %} <span class="tag">admin</span>{% endif %}</td>
+      <td>
+        <form method="post" action="/admin/people/{{ p.id }}/rename" class="inline">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input name="name" maxlength="40" placeholder="New name" required>
+          <button class="secondary">Rename</button>
+        </form>
+      </td>
+      <td>
+        <form method="post" action="/admin/people/{{ p.id }}/pin" class="inline">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input name="pin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" placeholder="New PIN" required autocomplete="off">
+          <button class="secondary">Reset PIN</button>
+        </form>
+      </td>
+      <td>
+        {% if p.id != me.id %}
+        <form method="post" action="/admin/people/{{ p.id }}/admin" class="inline">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="secondary">{% if p.is_admin %}Remove admin{% else %}Make admin{% endif %}</button>
+        </form>
+        <form method="post" action="/admin/people/{{ p.id }}/delete" class="inline" data-confirm="Delete {{ p.name }} and ALL their lists, including past years?">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input name="confirm_name" maxlength="40" placeholder="Type name to delete" required>
+          <button class="danger">Delete</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="card narrow">
+  <h2>Change this exchange's passphrase</h2>
+  <p class="muted small">Everyone else in {{ group.name }} will need to enter the new passphrase.</p>
+  <form method="post" action="/admin/passphrase">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>New passphrase <input type="password" name="passphrase" minlength="12" maxlength="200" required autocomplete="new-password"></label>
+    <label>Again <input type="password" name="passphrase2" minlength="12" maxlength="200" required autocomplete="new-password"></label>
+    <button>Change passphrase</button>
+  </form>
+</div>
+<div class="card narrow">
+  <h2>Backup</h2>
+  <p class="muted small">A backup of the whole site is made automatically once a day. You can also make one now.</p>
+  <form method="post" action="/admin/backup">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="secondary">Back up now</button>
+  </form>
+</div>
+{% endblock %}

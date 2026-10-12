@@ -1,0 +1,38 @@
+# Family Christmas lists + Cloudflare Tunnel.
+# Copy this file and .env (from .env.example) to a folder on the NAS, then:
+#   docker compose pull && docker compose up -d
+services:
+  app:
+    image: ghcr.io/irwinthetapemeasure/christmas-list:latest
+    restart: unless-stopped
+    env_file: .env
+    # Match the owner of ./data on your NAS (run `id` on the NAS to find yours).
+    user: "${PUID:-1000}:${PGID:-1000}"
+    volumes:
+      - ./data:/data
+    # No "ports:" on purpose: only cloudflared can reach the app.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    networks: [xmas]
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      app:
+        condition: service_healthy
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    networks: [xmas]
+
+networks:
+  xmas:

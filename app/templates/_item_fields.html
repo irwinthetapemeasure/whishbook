@@ -1,0 +1,21 @@
+<label>What is it?
+  <input name="title" required maxlength="200" value="{{ item.title if item else '' }}">
+</label>
+<label>Link <span class="muted">(optional)</span>
+  <input name="link" maxlength="500" placeholder="https://..." value="{{ item.link if item else '' }}">
+</label>
+<div class="row">
+  <label>Price <span class="muted">(optional)</span>
+    <input name="price" maxlength="30" value="{{ item.price if item else '' }}">
+  </label>
+  <label>How much?
+    <select name="priority">
+      {% for k, v in PRIORITIES.items() %}
+      <option value="{{ k }}" {% if (item.priority if item else 2) == k %}selected{% endif %}>{{ v }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</div>
+<label>Notes <span class="muted">(size, colour, etc.)</span>
+  <textarea name="notes" maxlength="1000" rows="2">{{ item.notes if item else '' }}</textarea>
+</label>
