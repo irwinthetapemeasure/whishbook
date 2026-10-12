@@ -88,7 +88,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 /* Buttons */
 button, .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 600;
   padding: 8px 16px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-text);
-  cursor: pointer; text-decoration: none; min-height: 42px; transition: background .15s, transform .05s, box-shadow .15s; }
+  cursor: pointer; text-decoration: none; min-height: 42px; white-space: nowrap; transition: background .15s, transform .05s, box-shadow .15s; }
 button:hover, .button:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-text); }
 button:active, .button:active { transform: translateY(1px); }
 button.secondary, .button.secondary { background: var(--card); color: var(--text); border-color: var(--border); }
@@ -146,14 +146,22 @@ form.inline input { width: auto; margin: 0; max-width: 150px; }
 .claim.mine { color: var(--green); font-weight: 700; background: var(--green-soft); padding: 4px 12px; border-radius: 999px; }
 
 /* Admin */
-table.admin { width: 100%; border-collapse: collapse; }
-table.admin td { padding: 10px 4px; border-top: 1px solid var(--border); vertical-align: middle; }
+.admin-people { list-style: none; padding: 0; margin: 0; }
+.person-row { padding: 14px 0; border-top: 1px solid var(--border); }
+.person-row:first-child { border-top: none; padding-top: 4px; }
+.person-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
+.person-head .avatar { width: 32px; height: 32px; font-size: .95rem; }
+.person-head .tag { margin-left: 0; }
+.person-actions { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.person-actions form.inline input { width: 140px; max-width: 100%; }
+.pdelete summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .95rem; padding: 8px 4px; list-style: none; }
+.pdelete summary::-webkit-details-marker { display: none; }
+.pdelete[open] { flex-basis: 100%; }
+.pdelete[open] summary { display: none; }
+.pdelete form.inline input { width: 200px; }
 @media (max-width: 600px) {
   h1 { font-size: 1.6rem; }
   .row { grid-template-columns: 1fr; }
-  table.admin, table.admin tr, table.admin td { display: block; }
-  table.admin td { border: none; padding: 4px 0; }
-  table.admin tr { border-top: 1px solid var(--border); padding: 10px 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
