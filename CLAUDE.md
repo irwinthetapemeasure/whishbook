@@ -9,16 +9,18 @@ Self-hosted Christmas wish-list site for the owner's gift exchanges. Repo: `irwi
 - **Hidden claims:** others mark "I'm getting this"; the list owner never sees claims or claimers. `db.items_for_owner` deliberately never touches the `claims` table, and tests enforce this.
 - Lists are per **calendar year**; past years are viewable but read-only. "Start from last year's list" copies *all* items (copying only unclaimed ones would leak claims).
 - The **first person to join a group is its admin.** Groups are created only from the NAS CLI (`app.manage`), never from the web.
+- **Questionnaire ("All about me"):** per-group, off by default, toggled and edited by the group's admin at `/admin/questionnaire`. Turning it on with no questions loads the "Family favourites" template (the family's paper wish-list sheet). Presets live in `app/questionnaire.py`; loading one replaces all questions and their answers. New joiners land on `/questionnaire` (can skip); anyone with an unsaved question is sent there on every login until they save once (blanks allowed). Adding a question re-prompts everyone. Answers belong to the person (not the year) and are **visible to the whole group** in an "About <name>" panel on their list; turning it off hides answers without deleting them.
 - The owner is a separate person in each exchange; "Switch to another gift exchange" on the home page clears the session.
 
 ## Stack and layout
 Python 3.12, FastAPI, Jinja2 server-rendered pages, SQLite (`/data/christmas.db`), no JS framework (`static/app.js` only does confirm dialogs).
 - `app/main.py`: `create_app(settings)` factory holding all routes, the session middleware, the CSRF dependency, the `BodyLimit` ASGI middleware and security headers. Uvicorn entry is `app.main:get_app --factory`.
-- `app/db.py`: schema and all queries (parameterised). Tables: groups, people(group_id), items, claims, login_attempts.
+- `app/db.py`: schema and all queries (parameterised). Tables: groups, people(group_id), items, claims, login_attempts, quiz_settings, quiz_questions, quiz_answers (no migration tool: new tables only, never ALTER).
 - `app/security.py`: argon2 hashing, signed-cookie sessions (itsdangerous), CSRF, `Limiter` (escalating lockouts), Turnstile verification (fails closed).
+- `app/questionnaire.py`: preset questionnaire templates (`TEMPLATES`).
 - `app/manage.py`: CLI: `list`, `add-group`, `set-passphrase`, `rename-group`, `make-admin`, `reset-pin`, `delete-group`.
 - `app/config.py`: env vars `SECRET_KEY` (required, 32+ chars), `DATA_DIR`, `DB_PATH`, `COOKIE_SECURE`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TRUST_CF_CONNECTING_IP`, `BACKUP_DIR`, `BACKUP_KEEP`, `SESSION_DAYS`.
-- `tests/`: pytest, 32 tests (gate, group isolation, lockouts, claim privacy, authorization, CSRF, headers, CLI).
+- `tests/`: pytest, 42 tests (gate, group isolation, lockouts, claim privacy, authorization, CSRF, headers, CLI, questionnaire).
 
 Session cookie holds `gid`, `gv` (the group's gate_version, bumped when its passphrase changes, which logs everyone out), `pid`, `ph` (last 16 chars of the PIN hash, so a PIN change logs that person out elsewhere) and `csrf`.
 
