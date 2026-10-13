@@ -31,6 +31,12 @@ a { color: var(--accent); text-underline-offset: 2px; }
 a:hover { color: var(--accent-hover); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
 main { max-width: 780px; margin: 0 auto; padding: 20px 16px 48px; }
+/* On-screen keyboards: leave room around a focused field when the browser scrolls it into view,
+   and while typing on a touch screen add space below the form so its button can scroll above the keyboard. */
+input, select, textarea { scroll-margin: 80px 0 120px; }
+@media (pointer: coarse) {
+  body:has(:is(input, textarea, select):focus) main { padding-bottom: 50vh; }
+}
 h1, h2 { font-family: var(--serif); font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
 h1 { font-size: 1.9rem; margin: .4rem 0 1rem; }
 h2 { font-size: 1.25rem; margin-top: 0; }
