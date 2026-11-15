@@ -446,7 +446,8 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         year = year or this_year
         years = sorted(set(db.years_for(person_id)) | {this_year}, reverse=True)
         is_owner = me["id"] == person_id
-        items = db.items_for_owner(person_id, year) if is_owner else db.items_for_viewer(person_id, year)
+        items = (db.items_for_owner(person_id, year) if is_owner
+                 else db.items_for_viewer(person_id, year, me["id"]))
         about, _ = (db.quiz_answers_shown(person_id, person["group_id"])
                                 if db.quiz_enabled(person["group_id"]) else ([], None))
         return render(
