@@ -153,11 +153,35 @@ def test_owner_never_sees_claims(app, db, browser):
     assert "Wool socks" in mine
     assert "getting this" not in mine and "claimed" not in mine and "Bob" not in mine
 
+    # Nobody but the claimer learns who claimed it: others only see that it's taken.
     carol = browser()
     carol.enter(PASS_A)
     carol.join("Carol")
-    assert "Bob is getting this" in carol.get(f"/p/{alice_id}").text
+    seen_by_carol = carol.get(f"/p/{alice_id}").text
+    assert "Someone's getting this" in seen_by_carol
+    assert "Bob" not in seen_by_carol and "I'm getting this" not in seen_by_carol
+
+    seen_by_bob = bob.get(f"/p/{alice_id}").text
+    assert "You're getting this" in seen_by_bob and "Someone's getting this" not in seen_by_bob
     assert "Wool socks" in bob.get("/shopping").text
+
+
+def test_viewer_query_never_returns_the_claimer(app, db, browser):
+    alice, bob = setup_family(app, db, browser)
+    alice_id = pid(db, app.state.group_a, "Alice")
+    bob_id = pid(db, app.state.group_a, "Bob")
+    sock = item_ids(db, alice_id)[0]
+    bob.post(f"/items/{sock}/claim")
+    carol = browser()
+    carol.enter(PASS_A)
+    carol.join("Carol")
+    carol_id = pid(db, app.state.group_a, "Carol")
+    for row in db.items_for_viewer(alice_id, current_year(), carol_id):
+        assert "claimer_id" not in row.keys() and "claimer_name" not in row.keys()
+        if row["id"] == sock:
+            assert row["claimed"] and not row["mine"]
+    mine = {r["id"]: r for r in db.items_for_viewer(alice_id, current_year(), bob_id)}
+    assert mine[sock]["claimed"] and mine[sock]["mine"]
 
 
 def test_cannot_claim_own_or_double_claim_or_unclaim_others(app, db, browser):

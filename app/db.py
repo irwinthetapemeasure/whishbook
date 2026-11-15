@@ -203,17 +203,22 @@ class Database:
                 (person_id, year),
             ).fetchall()
 
-    def items_for_viewer(self, person_id: int, year: int):
-        """Someone else's view: includes who (if anyone) claimed each item."""
+    def items_for_viewer(self, person_id: int, year: int, viewer_id: int):
+        """Someone else's view: whether each item is claimed, and whether by the viewer.
+
+        Deliberately never returns who the claimer is: only the person who claimed an
+        item may know it was them, so nobody can tell who is buying what.
+        """
         with self.connect() as c:
             return c.execute(
                 "SELECT i.id, i.person_id, i.year, i.title, i.link, i.notes, i.price, "
-                "i.priority, i.sort, cl.claimer_id, p.name AS claimer_name "
+                "i.priority, i.sort, "
+                "cl.item_id IS NOT NULL AS claimed, "
+                "COALESCE(cl.claimer_id = ?, 0) AS mine "
                 "FROM items i "
                 "LEFT JOIN claims cl ON cl.item_id = i.id "
-                "LEFT JOIN people p ON p.id = cl.claimer_id "
                 "WHERE i.person_id=? AND i.year=? ORDER BY i.sort, i.id",
-                (person_id, year),
+                (viewer_id, person_id, year),
             ).fetchall()
 
     def get_item(self, item_id: int):
